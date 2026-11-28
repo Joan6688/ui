@@ -4,10 +4,13 @@
   </span>
 </template>
 
-<script setup>
-defineProps({
-  type: { type: String, default: 'default' },
-  text: { type: String, default: '' }
+<script setup lang="ts">
+withDefaults(defineProps<{
+  type?: string
+  text?: string
+}>(), {
+  type: 'default',
+  text: ''
 })
 </script>
 

@@ -12,14 +12,20 @@
   </Form>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { reactive } from 'vue'
 import Form from './Form.vue'
 import FormItem from './FormItem.vue'
 import Select from './Select.vue'
 import Input from './Input.vue'
 
-const form = reactive({ type: '', value: '', remark: '' })
+interface ThresholdFormData {
+  type: string
+  value: string
+  remark: string
+}
+
+const form = reactive<ThresholdFormData>({ type: '', value: '', remark: '' })
 const typeOptions = [
   { label: '水位阈值', value: 'water' },
   { label: '流量阈值', value: 'flow' },

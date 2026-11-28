@@ -270,7 +270,7 @@ const curveSeries: ChartSeries[] = [
 const curveX: number[] = [1, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000]
 
 const showGate = ref<boolean>(false)
-const gateCurrent = ref<number>(1)
+const gateCurrent = ref<string | number>(1)
 
 const gateList: ScheduleListItem[] = [
   { id: 1, name: '默认', modifyTime: '2024-11-26 14:29:59' },

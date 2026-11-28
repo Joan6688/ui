@@ -6,10 +6,13 @@
   </div>
 </template>
 
-<script setup>
-defineProps({
-  label: { type: String, default: '' },
-  value: { type: [String, Number], default: '' }
+<script setup lang="ts">
+withDefaults(defineProps<{
+  label?: string
+  value?: string | number
+}>(), {
+  label: '',
+  value: ''
 })
 </script>
 

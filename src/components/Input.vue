@@ -31,27 +31,43 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 
-const props = defineProps({
-  modelValue: { type: String, default: '' },
-  type: { type: String, default: 'text' },
-  placeholder: { type: String, default: '' },
-  size: { type: String, default: 'md' },
-  disabled: { type: Boolean, default: false },
-  readonly: { type: Boolean, default: false },
-  clearable: { type: Boolean, default: false },
-  unit: { type: String, default: '' },
-  maxlength: { type: Number, default: undefined }
+const props = withDefaults(defineProps<{
+  modelValue?: string
+  type?: string
+  placeholder?: string
+  size?: string
+  disabled?: boolean
+  readonly?: boolean
+  clearable?: boolean
+  unit?: string
+  maxlength?: number
+}>(), {
+  modelValue: '',
+  type: 'text',
+  placeholder: '',
+  size: 'md',
+  disabled: false,
+  readonly: false,
+  clearable: false,
+  unit: '',
+  maxlength: undefined
 })
-const emit = defineEmits(['update:modelValue', 'change', 'focus', 'blur', 'keydown'])
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string): void
+  (e: 'change', event: Event): void
+  (e: 'focus', event: FocusEvent): void
+  (e: 'blur', event: FocusEvent): void
+  (e: 'keydown', event: KeyboardEvent): void
+}>()
 
-const inputRef = ref(null)
+const inputRef = ref<HTMLInputElement | null>(null)
 const focused = ref(false)
 const pwdVisible = ref(false)
 
-const onInput = (e) => emit('update:modelValue', e.target.value)
+const onInput = (e: Event) => emit('update:modelValue', (e.target as HTMLInputElement).value)
 const clear = () => { emit('update:modelValue', ''); inputRef.value?.focus() }
 const togglePwd = () => {
   pwdVisible.value = !pwdVisible.value

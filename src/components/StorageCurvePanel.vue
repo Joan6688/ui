@@ -22,7 +22,7 @@
               :model-value="year"
               :min-year="pickerMin"
               :max-year="pickerMax"
-              @update:model-value="val => emit('update:year', val)"
+              @update:model-value="val => emit('update:year', val as string | number)"
               @change="val => emit('yearChange', val)"
             />
           </div>
@@ -45,45 +45,61 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
+import type { SelectOption, ChartSeries } from '@/types'
 import DatePicker from './DatePicker.vue'
 import LineChart from './LineChart.vue'
 
-const props = defineProps({
-  visible: { type: Boolean, default: false },
-  title: { type: String, default: '库容曲线' },
-  icon: { type: String, default: '📊' },
-  note: { type: String, default: '注：1985年国家高程标准' },
-  showYear: { type: Boolean, default: true },
-  year: { type: [String, Number], default: 2024 },
-  yearOptions: { type: Array, default: () => [
+const props = withDefaults(defineProps<{
+  visible?: boolean
+  title?: string
+  icon?: string
+  note?: string
+  showYear?: boolean
+  year?: string | number
+  yearOptions?: SelectOption[]
+  series?: ChartSeries[]
+  xLabels?: (number | string)[]
+  yLeftLabel?: string
+  yRightLabel?: string
+  yLeftMin?: number
+  yLeftMax?: number
+  yRightMin?: number
+  yRightMax?: number
+}>(), {
+  visible: false,
+  title: '库容曲线',
+  icon: '📊',
+  note: '注：1985年国家高程标准',
+  showYear: true,
+  year: 2024,
+  yearOptions: () => [
     { label: '2024', value: 2024 },
     { label: '2023', value: 2023 },
     { label: '2022', value: 2022 },
     { label: '2021', value: 2021 },
     { label: '2020', value: 2020 }
-  ]},
-  series: {
-    type: Array,
-    default: () => ([
-      { name: '水位-库容', color: '#00d4ff', data: [185, 192, 198, 202, 206, 209, 211, 213, 214.5, 215.8] },
-      { name: '水位-面积', color: '#ff8800', axis: 'right', data: [0.5, 1.8, 3.0, 4.2, 5.5, 6.8, 7.8, 8.5, 9.0, 9.5] }
-    ])
-  },
-  xLabels: {
-    type: Array,
-    default: () => [1.00, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000]
-  },
-  yLeftLabel: { type: String, default: 'm' },
-  yRightLabel: { type: String, default: 'km²' },
-  yLeftMin: { type: Number, default: 185 },
-  yLeftMax: { type: Number, default: 216 },
-  yRightMin: { type: Number, default: 0 },
-  yRightMax: { type: Number, default: 12 }
+  ],
+  series: () => ([
+    { name: '水位-库容', color: '#00d4ff', data: [185, 192, 198, 202, 206, 209, 211, 213, 214.5, 215.8] },
+    { name: '水位-面积', color: '#ff8800', axis: 'right', data: [0.5, 1.8, 3.0, 4.2, 5.5, 6.8, 7.8, 8.5, 9.0, 9.5] }
+  ]),
+  xLabels: () => [1.00, 2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 18000],
+  yLeftLabel: 'm',
+  yRightLabel: 'km²',
+  yLeftMin: 185,
+  yLeftMax: 216,
+  yRightMin: 0,
+  yRightMax: 12
 })
 
-const emit = defineEmits(['close', 'update:visible', 'update:year', 'yearChange'])
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'update:visible', value: boolean): void
+  (e: 'update:year', value: string | number): void
+  (e: 'yearChange', value: string | number | Date): void
+}>()
 
 const pickerMin = computed(() => {
   const values = props.yearOptions.map(o => Number(o.value)).filter(v => !isNaN(v))

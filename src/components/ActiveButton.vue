@@ -8,12 +8,18 @@
   </button>
 </template>
 
-<script setup>
-const props = defineProps({
-  active: { type: Boolean, default: false },
-  color: { type: String, default: 'blue' }
+<script setup lang="ts">
+const props = withDefaults(defineProps<{
+  active?: boolean
+  color?: string
+}>(), {
+  active: false,
+  color: 'blue'
 })
-const emit = defineEmits(['update:active', 'change'])
+const emit = defineEmits<{
+  (e: 'update:active', value: boolean): void
+  (e: 'change', value: boolean): void
+}>()
 
 const toggle = () => {
   const next = !props.active

@@ -12,35 +12,42 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onUnmounted } from 'vue'
 
-const props = defineProps({
-  modelValue: { type: Number, default: 0 },
-  showValue: { type: Boolean, default: false },
-  max: { type: Number, default: 100 }
+const props = withDefaults(defineProps<{
+  modelValue?: number
+  showValue?: boolean
+  max?: number
+}>(), {
+  modelValue: 0,
+  showValue: false,
+  max: 100
 })
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: number): void
+  (e: 'change', value: number): void
+}>()
 
-const wrapperRef = ref(null)
+const wrapperRef = ref<HTMLDivElement | null>(null)
 const dragging = ref(false)
 
-const updateFromX = (x) => {
+const updateFromX = (x: number) => {
   if (!wrapperRef.value) return
-  const rect = wrapperRef.value.querySelector('.bar-track').getBoundingClientRect()
+  const rect = wrapperRef.value.querySelector('.bar-track')!.getBoundingClientRect()
   const percent = Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100))
   emit('update:modelValue', percent)
   emit('change', percent)
 }
 
-const startDrag = (e) => {
+const startDrag = (e: MouseEvent) => {
   dragging.value = true
   updateFromX(e.clientX)
   document.addEventListener('mousemove', onDrag)
   document.addEventListener('mouseup', stopDrag)
 }
-const onClickTrack = (e) => { if (!dragging.value) updateFromX(e.clientX) }
-const onDrag = (e) => { if (dragging.value) updateFromX(e.clientX) }
+const onClickTrack = (e: MouseEvent) => { if (!dragging.value) updateFromX(e.clientX) }
+const onDrag = (e: MouseEvent) => { if (dragging.value) updateFromX(e.clientX) }
 const stopDrag = () => {
   dragging.value = false
   document.removeEventListener('mousemove', onDrag)

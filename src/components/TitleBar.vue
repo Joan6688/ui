@@ -8,12 +8,17 @@
   </div>
 </template>
 
-<script setup>
-defineProps({
-  title: { type: String, default: '黄前水库矩阵管理平台 - 预演预案' },
-  showBack: { type: Boolean, default: true }
+<script setup lang="ts">
+withDefaults(defineProps<{
+  title?: string
+  showBack?: boolean
+}>(), {
+  title: '黄前水库矩阵管理平台 - 预演预案',
+  showBack: true
 })
-const emit = defineEmits(['back'])
+const emit = defineEmits<{
+  (e: 'back'): void
+}>()
 </script>
 
 <style scoped>

@@ -20,21 +20,35 @@
   </Teleport>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 import Button from './Button.vue'
 
-const props = defineProps({
-  visible: { type: Boolean, default: false },
-  title: { type: String, default: '' },
-  width: { type: [String, Number], default: 420 },
-  closable: { type: Boolean, default: true },
-  showFooter: { type: Boolean, default: true },
-  confirmText: { type: String, default: '确定' },
-  cancelText: { type: String, default: '取消' },
-  maskClosable: { type: Boolean, default: true }
+const props = withDefaults(defineProps<{
+  visible?: boolean
+  title?: string
+  width?: string | number
+  closable?: boolean
+  showFooter?: boolean
+  confirmText?: string
+  cancelText?: string
+  maskClosable?: boolean
+}>(), {
+  visible: false,
+  title: '',
+  width: 420,
+  closable: true,
+  showFooter: true,
+  confirmText: '确定',
+  cancelText: '取消',
+  maskClosable: true
 })
-const emit = defineEmits(['update:visible', 'close', 'confirm', 'cancel'])
+const emit = defineEmits<{
+  (e: 'update:visible', value: boolean): void
+  (e: 'close'): void
+  (e: 'confirm'): void
+  (e: 'cancel'): void
+}>()
 
 const wrapStyle = computed(() => ({
   width: typeof props.width === 'number' ? `${props.width}px` : props.width
@@ -53,7 +67,7 @@ const handleCancel = () => {
   close()
 }
 
-const onEsc = (e) => { if (e.key === 'Escape' && props.visible) close() }
+const onEsc = (e: KeyboardEvent) => { if (e.key === 'Escape' && props.visible) close() }
 onMounted(() => document.addEventListener('keydown', onEsc))
 onUnmounted(() => document.removeEventListener('keydown', onEsc))
 </script>

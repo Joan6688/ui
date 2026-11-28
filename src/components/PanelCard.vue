@@ -19,13 +19,17 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, useSlots } from 'vue'
 
-const props = defineProps({
-  title: { type: String, default: '' },
-  subtitle: { type: String, default: '' },
-  bordered: { type: Boolean, default: true }
+const props = withDefaults(defineProps<{
+  title?: string
+  subtitle?: string
+  bordered?: boolean
+}>(), {
+  title: '',
+  subtitle: '',
+  bordered: true
 })
 const slots = useSlots()
 

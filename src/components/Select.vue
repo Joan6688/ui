@@ -34,18 +34,27 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import type { SelectOption } from '@/types'
 
-const props = defineProps({
-  modelValue: { type: [String, Number], default: '' },
-  options: { type: Array, default: () => [] },
-  placeholder: { type: String, default: '请选择' },
-  disabled: { type: Boolean, default: false }
+const props = withDefaults(defineProps<{
+  modelValue?: string | number
+  options?: SelectOption[]
+  placeholder?: string
+  disabled?: boolean
+}>(), {
+  modelValue: '',
+  options: () => [],
+  placeholder: '请选择',
+  disabled: false
 })
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string | number): void
+  (e: 'change', value: string | number): void
+}>()
 
-const wrapRef = ref(null)
+const wrapRef = ref<HTMLDivElement | null>(null)
 const isOpen = ref(false)
 const pos = ref({ top: 0, left: 0, width: 0, flipUp: false })
 
@@ -54,11 +63,11 @@ const currentLabel = computed(() => {
   return opt?.label || ''
 })
 
-const dropStyle = computed(() => {
+const dropStyle = computed<Record<string, string>>(() => {
   const d = pos.value
   return {
     position: 'fixed',
-    top: d.flipUp ? `${d.top}px` : `${d.top}px`,
+    top: `${d.top}px`,
     left: `${d.left}px`,
     width: `${d.width}px`,
     transform: d.flipUp ? 'translateY(-100%)' : 'translateY(0)'
@@ -88,15 +97,16 @@ const toggleDropdown = async () => {
   }
 }
 
-const select = (val) => {
+const select = (val: string | number) => {
   emit('update:modelValue', val)
   emit('change', val)
   isOpen.value = false
 }
 
-const close = (e) => {
+const close = (e: MouseEvent) => {
   if (!isOpen.value) return
-  if (!wrapRef.value?.contains(e.target) && !e.target.closest('.select-dropdown-inner')) {
+  const target = e.target as HTMLElement
+  if (!wrapRef.value?.contains(target) && !target.closest('.select-dropdown-inner')) {
     isOpen.value = false
   }
 }

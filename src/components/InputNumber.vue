@@ -30,30 +30,41 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 
-const props = defineProps({
-  modelValue: { type: Number, default: 0 },
-  min: { type: Number, default: -Infinity },
-  max: { type: Number, default: Infinity },
-  step: { type: Number, default: 1 },
-  unit: { type: String, default: '' },
-  placeholder: { type: String, default: '' },
-  disabled: { type: Boolean, default: false }
+const props = withDefaults(defineProps<{
+  modelValue?: number
+  min?: number
+  max?: number
+  step?: number
+  unit?: string
+  placeholder?: string
+  disabled?: boolean
+}>(), {
+  modelValue: 0,
+  min: -Infinity,
+  max: Infinity,
+  step: 1,
+  unit: '',
+  placeholder: '',
+  disabled: false
 })
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: number): void
+  (e: 'change', value: number): void
+}>()
 
 const tempValue = ref(props.modelValue)
 
-const onInput = (e) => {
-  const val = Number(e.target.value)
+const onInput = (e: Event) => {
+  const val = Number((e.target as HTMLInputElement).value)
   if (!Number.isNaN(val)) emit('update:modelValue', val)
 }
 const onBlur = () => {
   tempValue.value = props.modelValue
 }
-const change = (delta) => {
+const change = (delta: number) => {
   const next = Math.max(props.min, Math.min(props.max, props.modelValue + delta))
   emit('update:modelValue', next)
   emit('change', next)

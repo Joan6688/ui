@@ -4,14 +4,19 @@
   </form>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, provide } from 'vue'
 
-const props = defineProps({
-  labelWidth: { type: String, default: '80px' },
-  labelAlign: { type: String, default: 'right' },
-  gap: { type: String, default: '16px' },
-  cols: { type: Number, default: 1 }
+const props = withDefaults(defineProps<{
+  labelWidth?: string
+  labelAlign?: string
+  gap?: string
+  cols?: number
+}>(), {
+  labelWidth: '80px',
+  labelAlign: 'right',
+  gap: '16px',
+  cols: 1
 })
 
 provide('tech-form', {

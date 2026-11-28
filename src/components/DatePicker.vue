@@ -89,26 +89,45 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 
-const props = defineProps({
-  modelValue: { type: [String, Date], default: '' },
-  mode: { type: String, default: 'date' },
-  placeholder: { type: String, default: '选择日期' },
-  disabled: { type: Boolean, default: false },
-  minYear: { type: Number, default: 1970 },
-  maxYear: { type: Number, default: 2099 }
-})
-const emit = defineEmits(['update:modelValue', 'change'])
+interface DayCell {
+  year: number
+  month: number
+  day: number
+}
 
-const wrapRef = ref(null)
+type DPMode = 'date' | 'month' | 'year'
+type ViewLevel = 'day' | 'month' | 'year'
+
+const props = withDefaults(defineProps<{
+  modelValue?: string | Date | number
+  mode?: DPMode
+  placeholder?: string
+  disabled?: boolean
+  minYear?: number
+  maxYear?: number
+}>(), {
+  modelValue: '',
+  mode: 'date',
+  placeholder: '选择日期',
+  disabled: false,
+  minYear: 1970,
+  maxYear: 2099
+})
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string | Date | number): void
+  (e: 'change', value: string | Date | number): void
+}>()
+
+const wrapRef = ref<HTMLDivElement | null>(null)
 const isOpen = ref(false)
 const pos = ref({ top: 0, left: 0, flipUp: false })
 
 const viewYear = ref(0)
 const viewMonth = ref(0)
-const viewLevel = ref('day')
+const viewLevel = ref<ViewLevel>('day')
 
 const weekNames = ['日', '一', '二', '三', '四', '五', '六']
 const now = new Date()
@@ -157,7 +176,7 @@ watch(() => props.mode, (m) => {
 
 const showSideArrows = computed(() => props.mode === 'year')
 
-const arrowStep = (delta) => {
+const arrowStep = (delta: number) => {
   if (props.mode === 'year') {
     const cur = rawYear.value ?? currentYear
     let y = cur + delta
@@ -178,9 +197,9 @@ const arrowStep = (delta) => {
   }
 }
 
-const onInputChange = (e) => {
+const onInputChange = (e: Event) => {
   if (props.mode === 'year') {
-    const v = parseInt(e.target.value, 10)
+    const v = parseInt((e.target as HTMLInputElement).value, 10)
     if (!isNaN(v)) {
       let y = v
       if (y < props.minYear) y = props.minYear
@@ -192,7 +211,6 @@ const onInputChange = (e) => {
 }
 
 const onInputBlur = () => {
-  // 触发一次 change 以确保值合法
   if (props.mode === 'year') {
     const cur = rawYear.value ?? currentYear
     emit('update:modelValue', cur)
@@ -208,17 +226,17 @@ const viewStartYear = computed(() => {
 const yearRange = computed(() => {
   const start = Math.max(props.minYear, viewStartYear.value)
   const end = Math.min(props.maxYear, viewStartYear.value + 11)
-  const arr = []
+  const arr: number[] = []
   for (let y = start; y <= end; y++) arr.push(y)
   return arr
 })
 
-const days = computed(() => {
+const days = computed<(DayCell | null)[]>(() => {
   const first = new Date(viewYear.value, viewMonth.value, 1)
   const firstDow = first.getDay()
   const daysInMonth = new Date(viewYear.value, viewMonth.value + 1, 0).getDate()
   const prevMonthDays = new Date(viewYear.value, viewMonth.value, 0).getDate()
-  const arr = []
+  const arr: (DayCell | null)[] = []
   for (let i = firstDow - 1; i >= 0; i--) arr.push({ year: viewYear.value, month: viewMonth.value - 1, day: prevMonthDays - i })
   for (let d = 1; d <= daysInMonth; d++) arr.push({ year: viewYear.value, month: viewMonth.value, day: d })
   let tail = (7 - arr.length % 7) % 7
@@ -227,18 +245,18 @@ const days = computed(() => {
 })
 
 const panelStyle = computed(() => ({
-  position: 'fixed',
+  position: 'fixed' as const,
   top: `${pos.value.top}px`,
   left: `${pos.value.left}px`,
   transform: pos.value.flipUp ? 'translateY(-100%)' : 'translateY(0)',
   zIndex: 9999
 }))
 
-const isSelected = (d) => {
+const isSelected = (d: DayCell) => {
   if (!dateObj.value) return false
   return d.year === dateObj.value.getFullYear() && d.month === dateObj.value.getMonth() && d.day === dateObj.value.getDate()
 }
-const isToday = (d) => d.year === currentYear && d.month === currentMonth && d.day === now.getDate()
+const isToday = (d: DayCell) => d.year === currentYear && d.month === currentMonth && d.day === now.getDate()
 
 const calcPos = () => {
   if (!wrapRef.value) return
@@ -271,13 +289,13 @@ const headerLabel = computed(() => {
   return `${viewStartYear.value} - ${viewStartYear.value + 11}`
 })
 
-const shiftYear = (delta) => {
+const shiftYear = (delta: number) => {
   let y = viewYear.value + delta
   if (y < props.minYear) y = props.minYear
   if (y > props.maxYear) y = props.maxYear
   viewYear.value = y
 }
-const shiftMonth = (delta) => {
+const shiftMonth = (delta: number) => {
   let m = viewMonth.value + delta
   let y = viewYear.value
   if (m < 0) { m = 11; y-- }
@@ -287,7 +305,7 @@ const shiftMonth = (delta) => {
   viewYear.value = y; viewMonth.value = m
 }
 
-const pickDay = (d) => {
+const pickDay = (d: DayCell) => {
   const realMonth = d.month < 0 ? 11 : (d.month > 11 ? 0 : d.month)
   const realYear = d.month < 0 ? d.year - 1 : (d.month > 11 ? d.year + 1 : d.year)
   if (realMonth !== viewMonth.value) { viewMonth.value = realMonth; viewYear.value = realYear; return }
@@ -297,13 +315,13 @@ const pickDay = (d) => {
   isOpen.value = false
 }
 
-const pickMonth = (m) => {
+const pickMonth = (m: number) => {
   const result = new Date(viewYear.value, m, 1)
   emit('update:modelValue', result)
   emit('change', result)
   isOpen.value = false
 }
-const pickYear = (y) => {
+const pickYear = (y: number) => {
   const result = new Date(y, viewMonth.value || 0, 1)
   if (props.mode === 'year') {
     emit('update:modelValue', y); emit('change', y)
@@ -313,9 +331,10 @@ const pickYear = (y) => {
   isOpen.value = false
 }
 
-const close = (e) => {
+const close = (e: MouseEvent) => {
   if (!isOpen.value) return
-  if (!wrapRef.value?.contains(e.target) && !e.target.closest('.dp-panel')) isOpen.value = false
+  const target = e.target as HTMLElement
+  if (!wrapRef.value?.contains(target) && !target.closest('.dp-panel')) isOpen.value = false
 }
 const onScroll = () => { if (isOpen.value) calcPos() }
 

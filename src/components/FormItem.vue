@@ -11,21 +11,28 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, inject } from 'vue'
 
-const props = defineProps({
-  label: { type: String, default: '' },
-  required: { type: Boolean, default: false },
-  error: { type: String, default: '' },
-  labelWidth: { type: String, default: '' },
-  labelAlign: { type: String, default: '' },
-  inline: { type: Boolean, default: false }
+const props = withDefaults(defineProps<{
+  label?: string
+  required?: boolean
+  error?: string
+  labelWidth?: string
+  labelAlign?: string
+  inline?: boolean
+}>(), {
+  label: '',
+  required: false,
+  error: '',
+  labelWidth: '',
+  labelAlign: '',
+  inline: false
 })
 
-const form = inject('tech-form', null)
+const form = inject<{ labelWidth?: string; labelAlign?: string } | null>('tech-form', null)
 
-const labelStyle = computed(() => {
+const labelStyle = computed<Record<string, string>>(() => {
   const w = props.labelWidth || form?.labelWidth || 'var(--tf-label-width)'
   const a = props.labelAlign || form?.labelAlign || 'var(--tf-label-align)'
   return { width: w, textAlign: a }

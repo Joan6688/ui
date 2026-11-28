@@ -95,56 +95,63 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
+import type { ChartSeries } from '@/types'
 
-const props = defineProps({
-  series: {
-    type: Array,
-    required: true
-  },
-  xLabels: {
-    type: Array,
-    required: true
-  },
-  yLeftLabel: { type: String, default: '' },
-  yRightLabel: { type: String, default: '' },
-  yLeftMin: { type: Number, default: 0 },
-  yLeftMax: { type: Number, default: 100 },
-  yRightMin: { type: Number, default: 0 },
-  yRightMax: { type: Number, default: 100 },
-  showLegend: { type: Boolean, default: true },
-  height: { type: Number, default: 300 }
-})
+const props = defineProps<{
+  series: ChartSeries[]
+  xLabels: (number | string)[]
+  yLeftLabel?: string
+  yRightLabel?: string
+  yLeftMin?: number
+  yLeftMax?: number
+  yRightMin?: number
+  yRightMax?: number
+  showLegend?: boolean
+  height?: number
+}>()
 
-const emit = defineEmits(['hover'])
+const emit = defineEmits<{
+  (e: 'hover', data: { index: number; label: number | string; series: ChartSeries[] }): void
+}>()
 
 const svgW = 600
 const svgH = 300
 const padT = 28, padB = 44, padL = 52, padR = 52
 
-const wrapRef = ref(null)
+const wrapRef = ref<HTMLDivElement | null>(null)
 const hoverIdx = ref(-1)
 const mouseX = ref(0)
 const mouseY = ref(0)
 
+interface YTick {
+  y: number
+  labelL: string
+  labelR: string
+}
+interface XTick {
+  x: number
+  label: number | string
+}
+
 const hasRightAxis = computed(() => props.series.some(s => s.axis === 'right'))
 const rightColor = computed(() => props.series.find(s => s.axis === 'right')?.color || '#ff8800')
 
-const yTicks = computed(() => {
-  const arr = []
+const yTicks = computed<YTick[]>(() => {
+  const arr: YTick[] = []
   for (let i = 0; i <= 5; i++) {
     const y = padT + (svgH - padT - padB) * (1 - i / 5)
     arr.push({
       y,
-      labelL: (props.yLeftMin + (props.yLeftMax - props.yLeftMin) / 5 * i).toFixed(2),
-      labelR: (props.yRightMin + (props.yRightMax - props.yRightMin) / 5 * i).toFixed(2)
+      labelL: (props.yLeftMin! + (props.yLeftMax! - props.yLeftMin!) / 5 * i).toFixed(2),
+      labelR: (props.yRightMin! + (props.yRightMax! - props.yRightMin!) / 5 * i).toFixed(2)
     })
   }
   return arr
 })
 
-const xTicks = computed(() => {
+const xTicks = computed<XTick[]>(() => {
   const count = Math.min(8, props.xLabels.length)
   const step = (svgW - padL - padR) / (count - 1 || 1)
   const useOriginal = props.xLabels.some(v => typeof v === 'string')
@@ -161,25 +168,25 @@ const xTicks = computed(() => {
   }))
 })
 
-const getX = (i) => {
+const getX = (i: number) => {
   const step = (svgW - padL - padR) / (props.xLabels.length - 1 || 1)
   return padL + step * i
 }
-const getY = (s, i) => {
+const getY = (s: ChartSeries, i: number) => {
   const val = s.data[i] ?? 0
   if (s.axis === 'right') {
-    const range = props.yRightMax - props.yRightMin || 1
-    return svgH - padB - ((val - props.yRightMin) / range) * (svgH - padT - padB)
+    const range = props.yRightMax! - props.yRightMin! || 1
+    return svgH - padB - ((val - props.yRightMin!) / range) * (svgH - padT - padB)
   }
-  const range = props.yLeftMax - props.yLeftMin || 1
-  return svgH - padB - ((val - props.yLeftMin) / range) * (svgH - padT - padB)
+  const range = props.yLeftMax! - props.yLeftMin! || 1
+  return svgH - padB - ((val - props.yLeftMin!) / range) * (svgH - padT - padB)
 }
-const getLinePoints = (s) => {
+const getLinePoints = (s: ChartSeries) => {
   if (!s.data?.length) return ''
   return s.data.map((_, i) => `${getX(i)},${getY(s, i)}`).join(' ')
 }
 
-const formatSeriesVal = (s, idx) => {
+const formatSeriesVal = (s: ChartSeries, idx: number) => {
   const val = s.data[idx]
   if (val == null || isNaN(val)) return '-'
   const unit = s.axis === 'right' ? props.yRightLabel : props.yLeftLabel
@@ -197,7 +204,8 @@ const tooltipStyle = computed(() => {
   }
 })
 
-const onMouseMove = (e) => {
+const onMouseMove = (e: MouseEvent) => {
+  if (!wrapRef.value) return
   const rect = wrapRef.value.getBoundingClientRect()
   const relX = e.clientX - rect.left
   const scale = rect.width / svgW
